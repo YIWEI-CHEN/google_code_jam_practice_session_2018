@@ -8,13 +8,6 @@ Created on Sat Mar 31 06:58:23 2018
 from copy import copy
 from itertools import combinations
 from string import ascii_uppercase
-
-answer_map = {
-    (2, 2, 2): 'AB BA',
-    (3, 3, 2, 2): 'AA BC C BA',
-    (3, 1, 1, 2):'C C AB',
-    (3, 2, 3, 1):'BA BB CA',
-}
     
 def has_majority(senators):
     total = sum(senators)
@@ -56,32 +49,31 @@ def get_instruction(indices, peo_per_time):
 
 def evacuation(num_parties, senators):
     if is_empty(senators):
-        return
+        return ''
     
-    has_solution = False
     for peo_per_time in range(2, 0, -1):
         for indices, evacuated_result in strategy(num_parties, senators, peo_per_time):
             if has_majority(evacuated_result):
                 continue
             
-            print(get_instruction(indices, peo_per_time), evacuated_result)
-            has_solution = True
-            evacuation(num_parties, evacuated_result)
-            break
-        
-        if has_solution:
-            break
+            instruction = get_instruction(indices, peo_per_time)
+#            print(instruction, evacuated_result)
+            if is_empty(evacuated_result):
+                return instruction
+            else:
+                next_instruction = evacuation(num_parties, evacuated_result)
+                return '{} {}'.format(instruction, next_instruction)
             
 
 if __name__ == '__main__':
-    #t = int(input())
+    t = int(input())
     
     for i in range(1, t+1):
-        #num_parties = int(input())
-        num_parties = 3
-        #senators = list(map(int, input().split(' ')))
-        senators = [2, 3, 1]
+        num_parties = int(input())
+#        num_parties = 3
+        senators = list(map(int, input().split(' ')))
+#        senators = [2, 3, 1]
         
-        evacuation(num_parties, senators)
+        ans = evacuation(num_parties, senators)
         #ans = answer_map[tuple([num_parties] + senators)]
-        #print("Case #{}: {}".format(t, ans))
+        print("Case #{}: {}".format(i, ans))
