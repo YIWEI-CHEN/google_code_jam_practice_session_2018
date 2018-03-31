@@ -9,6 +9,8 @@ from copy import copy
 from itertools import combinations
 from string import ascii_uppercase
     
+lookup = dict()
+
 def has_majority(senators):
     total = sum(senators)
     if total == 0:
@@ -47,33 +49,44 @@ def get_instruction(indices, peo_per_time):
         indices = (indices[0], indices[0])
     return ''.join(ascii_uppercase[i] for i in indices)
 
-def evacuation(num_parties, senators):
-    if is_empty(senators):
-        return ''
-    
-    for peo_per_time in range(2, 0, -1):
-        for indices, evacuated_result in strategy(num_parties, senators, peo_per_time):
-            if has_majority(evacuated_result):
-                continue
-            
-            instruction = get_instruction(indices, peo_per_time)
-#            print(instruction, evacuated_result)
-            if is_empty(evacuated_result):
-                return instruction
-            else:
-                next_instruction = evacuation(num_parties, evacuated_result)
-                return '{} {}'.format(instruction, next_instruction)
-            
+def get_key(num_parties, senators):
+    return tuple([num_parties] + senators)
 
+def evacuation(num_parties, senators):
+    global lookup
+    k = get_key(num_parties, senators)
+
+    if k in lookup:
+        return lookup[k]
+    else:
+        for peo_per_time in range(2, 0, -1):
+            for indices, evacuated_result in strategy(num_parties, senators, peo_per_time):
+                if has_majority(evacuated_result):
+                    continue
+                
+                instruction = get_instruction(indices, peo_per_time)
+#                print(instruction, evacuated_result)
+                if is_empty(evacuated_result):
+                    return instruction
+                else:
+                    next_instruction = evacuation(num_parties, evacuated_result)
+                    ans = '{} {}'.format(instruction, next_instruction)
+                    lookup[k]= ans
+                    return ans
+            
 if __name__ == '__main__':
-    t = int(input())
+    FROM_STDIN = False
+    NUM_TESTCASE = 1
+    NUM_PARTIES = 3
+    SENATES = [2, 3, 1]
     
-    for i in range(1, t+1):
-        num_parties = int(input())
-#        num_parties = 3
-        senators = list(map(int, input().split(' ')))
-#        senators = [2, 3, 1]
+    t = int(input()) if FROM_STDIN else NUM_TESTCASE
         
-        ans = evacuation(num_parties, senators)
-        #ans = answer_map[tuple([num_parties] + senators)]
+    for i in range(1, t+1):
+        num_parties = int(input()) if FROM_STDIN else NUM_PARTIES
+        senators = list(map(int, input().split(' '))) if FROM_STDIN else SENATES
+        if is_empty(senators):
+            ans = ''
+        else:
+            ans = evacuation(num_parties, senators)
         print("Case #{}: {}".format(i, ans))
