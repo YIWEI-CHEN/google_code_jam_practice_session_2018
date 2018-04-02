@@ -6,7 +6,7 @@ Created on Sun Apr  1 06:11:18 2018
 @author: yiwei
 """
 import math
-from collections import namedtuple, deque
+from collections import namedtuple, defaultdict
 
 NUM_TWO_END_STALLS = 2
 
@@ -23,14 +23,14 @@ NUM_TWO_END_STALLS = 2
 
 """we do not have to think optimization
 If I spend much time coming up with the optimization, the thinking way is not correct"""
-# def get_threshold(num_stalls):
-#     if num_stalls in threshold_table:
-#         return threshold_table[num_stalls]
+# def get_threshold(num_stall):
+#     if num_stall in threshold_table:
+#         return threshold_table[num_stall]
 
-#     one = math.ceil((num_stalls - 1) / 2)
-#     the_other = num_stalls - 1 - one
-#     threshold_table[num_stalls] = get_threshold(one) + get_threshold(the_other) + 1
-#     return threshold_table[num_stalls]
+#     one = math.ceil((num_stall - 1) / 2)
+#     the_other = num_stall - 1 - one
+#     threshold_table[num_stall] = get_threshold(one) + get_threshold(the_other) + 1
+#     return threshold_table[num_stall]
     
 def measure_empty_distances(stalls):
     """we should save time on corner cases."""
@@ -59,19 +59,23 @@ def calcuate_empty_stalls(stalls, people):
     # if people == stalls or people > get_threshold(stalls):
     #     return Distance(0, 0)
 
-    stall_list = [stalls]
+    # key = stall size, value = number of the same size of stalls
+    stall_candidate = defaultdict(int)
+    stall_candidate[stalls] = 1
 
-    # people choose a stall
-    for enter_time in range(people):
+    while people > 0:
         """Important point!!!
             As long as the stall number is max for current people, we don't care which one is selected and it is left or right
             All we want is left and right empty size
         """
-        num_stalls = max(stall_list) # """keep point"""
-        l, r = measure_empty_distances(num_stalls)
-        stall_list.remove(num_stalls)
-        stall_list.append(l)
-        stall_list.append(r)
+        num_stall = max(stall_candidate) # """keep point"""
+        used = min(stall_candidate[num_stall], people)
+        people -= used
+        stall_candidate[num_stall] -= used
+        if stall_candidate[num_stall] == 0: del stall_candidate[num_stall]
+        l, r = measure_empty_distances(num_stall)
+        stall_candidate[l] += used
+        stall_candidate[r] += used
 
     return (r, l)
 
