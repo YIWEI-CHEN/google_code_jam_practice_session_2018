@@ -6,6 +6,7 @@ Created on Sun Apr  1 06:11:18 2018
 @author: yiwei
 """
 import math
+from collections import namedtuple, deque
 
 NUM_TWO_END_STALLS = 2
 
@@ -17,6 +18,8 @@ threshold_table = {
     # 4: 2,
 }
 
+Distance = namedtuple('Distance', ['max', 'min'])
+
 def get_threshold(num_stalls):
     if num_stalls in threshold_table:
         return threshold_table[num_stalls]
@@ -26,56 +29,53 @@ def get_threshold(num_stalls):
     threshold_table[num_stalls] = get_threshold(one) + get_threshold(the_other) + 1
     return threshold_table[num_stalls]
     
-def measure_empty_distances(left, right):
-    middle = (left + right) // 2
-    left_empty_distance = middle - left - 1
-    right_empty_distance = right - middle - 1
-#    if left_empty_distance < 0 or right_empty_distance < 0:
-#        print('left:{}, right:{}, middle:{}'.format(left, right, middle))
-    return middle, min(left_empty_distance, right_empty_distance), max(left_empty_distance, right_empty_distance)
+def measure_empty_distances(stalls):
+    if stalls <= 1 :
+        return Distance(0, 0)
+
+    selected = stalls // 2 if stalls % 2 == 0 else (stalls + 1) // 2 
+
+    right_empty = stalls - selected
+    left_empty = stalls - right_empty - 1
+
+    return Distance(max=right_empty, min=left_empty)
 
 def calcuate_empty_stalls(stalls, people):
-    if people >= stalls or stalls == 0 or people == 0:
-        return (0, 0)
+    if people > stalls or stalls == 0 or people == 0:
+        return Distance(0, 0)
 
-    # if people > get_threshold(stalls):
-    #     return (0, 0)
+    if people == stalls or people > get_threshold(stalls):
+        return Distance(0, 0)
 
     # leftmost and rightmost stalls constantly occupied by bathroom guard.
-    total_stalls = stalls + NUM_TWO_END_STALLS
-    occupied_positions = [0, total_stalls - 1]
+    num_stalls_list = [stalls]
 
     # people choose a stall
     for enter_time in range(people):
-        current_min, current_max, selected = -1, -1, None
+        current_min, current_max = -1, -1
+        current_stalls = None
+        # print(num_stalls_list)
+        for num_stalls in num_stalls_list:
+            distance = measure_empty_distances(num_stalls)
 
-        for i, pos in enumerate(occupied_positions[:-1]):
-            left = pos
-            right = occupied_positions[i + 1]
-
-            # no middle point between two consecutive integers
-            if right - left == 1:
+            if distance.min > current_min:
+                current_min, current_max = distance.min, distance.max
+                current_stalls = num_stalls
+            elif distance.min == current_min:
+                if distance.max > current_max:
+                    current_min, current_max = distance.min, distance.max
+                    current_stalls = num_stalls
+            else:
                 continue
+        num_stalls_list.remove(current_stalls)
+        if current_min > 0:
+            num_stalls_list.append(current_min)
+        if current_max > 0:
+            num_stalls_list.append(current_max)
 
-            middle, min_dist, max_dist = measure_empty_distances(left, right)
-            if min_dist > current_min:
-                current_min, current_max, selected= min_dist, max_dist, middle
-            elif min_dist == current_min:
-                if max_dist > current_max:
-                    current_min, current_max, selected= min_dist, max_dist, middle
-
-        if selected is not None:
-            occupied_positions.append(selected)
-            occupied_positions.sort()
-            # print(occupied_positions)
-
-    if selected is None:
-        return (0, 0)
-    else:
-        return (current_max, current_min)
+    return Distance(current_max, current_min)
 
 if __name__ == '__main__':
-    from collections import namedtuple
     TestCase = namedtuple('TestCase', ['num_other_stalls', 'num_people', 'answer'])
 
     FROM_STDIN = True
@@ -85,6 +85,9 @@ if __name__ == '__main__':
 
     testcases = list()
     for case in (
+        (2, 1, (1, 0)),
+        (3, 1, (1, 1)),
+        (3, 2, (0, 0)),
         (4, 2, (1, 0)),
         (5, 2, (1, 0)),
         (5, 3, (1, 0)),
@@ -92,6 +95,7 @@ if __name__ == '__main__':
         (6, 1, (3, 2)),
         (6, 2, (1, 1)),
         (6, 3, (1, 0)),
+        (6, 4, (0, 0)),
         (7, 1, (3, 3)),
         (7, 2, (1, 1)),
         (7, 3, (1, 1)),
