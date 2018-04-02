@@ -1,8 +1,8 @@
-for i in xrange(1,input()+1):
+for i in range(1,int(input())+1):
 	m = -1
-	d,j = map(float,raw_input().split())
-	for k in xrange(int(j)):
-		x,s = map(float,raw_input().split())
+	d,j = map(float,input().split())
+	for k in range(int(j)):
+		x,s = map(float,input().split())
 		m = max(m,(d-x)/s)
 	d = d/m
-	print 'Case #%d: %f'%(i,d)
+	print('Case #%d: %f'%(i,d))
