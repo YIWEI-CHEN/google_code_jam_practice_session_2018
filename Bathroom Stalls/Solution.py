@@ -10,70 +10,71 @@ from collections import namedtuple, deque
 
 NUM_TWO_END_STALLS = 2
 
-threshold_table = {
-    0: 0,
-    1: 0,
-    2: 1,
-    # 3: 1,
-    # 4: 2,
-}
+# threshold_table = {
+#     0: 0,
+#     1: 0,
+#     2: 1,
+#     # 3: 1,
+#     # 4: 2,
+# }
 
-Distance = namedtuple('Distance', ['max', 'min'])
+"""we need to avoid this way to save time"""
+# Distance = namedtuple('Distance', ['max', 'min'])
 
-def get_threshold(num_stalls):
-    if num_stalls in threshold_table:
-        return threshold_table[num_stalls]
+"""we do not have to think optimization
+If I spend much time coming up with the optimization, the thinking way is not correct"""
+# def get_threshold(num_stalls):
+#     if num_stalls in threshold_table:
+#         return threshold_table[num_stalls]
 
-    one = math.ceil((num_stalls - 1) / 2)
-    the_other = num_stalls - 1 - one
-    threshold_table[num_stalls] = get_threshold(one) + get_threshold(the_other) + 1
-    return threshold_table[num_stalls]
+#     one = math.ceil((num_stalls - 1) / 2)
+#     the_other = num_stalls - 1 - one
+#     threshold_table[num_stalls] = get_threshold(one) + get_threshold(the_other) + 1
+#     return threshold_table[num_stalls]
     
 def measure_empty_distances(stalls):
-    if stalls <= 1 :
-        return Distance(0, 0)
+    """we should save time on corner cases."""
+    # if stalls <= 1 :
+    #     return Distance(0, 0)
 
-    selected = stalls // 2 if stalls % 2 == 0 else (stalls + 1) // 2 
+    """we don't care which one is selected"""
+    # selected = stalls // 2 if stalls % 2 == 0 else (stalls + 1) // 2 
 
-    right_empty = stalls - selected
-    left_empty = stalls - right_empty - 1
+    """
+        we only want to get left and right empty dist.
+        r >= l definitely
+    """
+    l = (stalls - 1) // 2
+    r = stalls // 2
 
-    return Distance(max=right_empty, min=left_empty)
+    """we don't return (l, r)"""
+    return l, r
 
 def calcuate_empty_stalls(stalls, people):
-    if people > stalls or stalls == 0 or people == 0:
-        return Distance(0, 0)
+    """We may not prevent corner case"""
+    # if people > stalls or stalls == 0 or people == 0:
+    #     return Distance(0, 0)
 
-    if people == stalls or people > get_threshold(stalls):
-        return Distance(0, 0)
+    """We do not need extra optimization"""
+    # if people == stalls or people > get_threshold(stalls):
+    #     return Distance(0, 0)
 
-    # leftmost and rightmost stalls constantly occupied by bathroom guard.
-    num_stalls_list = [stalls]
+    stall_list = [stalls]
 
     # people choose a stall
     for enter_time in range(people):
-        current_min, current_max = -1, -1
-        current_stalls = None
-        # print(num_stalls_list)
-        for num_stalls in num_stalls_list:
-            distance = measure_empty_distances(num_stalls)
+        """Important point!!!
+            As long as the stall number is max for current people, we don't care which one is selected and it is left or right
+            All we want is left and right empty size
+        """
+        num_stalls = max(stall_list) # """keep point"""
+        l, r = measure_empty_distances(num_stalls)
+        stall_list.remove(num_stalls)
+        stall_list.append(l)
+        stall_list.append(r)
 
-            if distance.min > current_min:
-                current_min, current_max = distance.min, distance.max
-                current_stalls = num_stalls
-            elif distance.min == current_min:
-                if distance.max > current_max:
-                    current_min, current_max = distance.min, distance.max
-                    current_stalls = num_stalls
-            else:
-                continue
-        num_stalls_list.remove(current_stalls)
-        if current_min > 0:
-            num_stalls_list.append(current_min)
-        if current_max > 0:
-            num_stalls_list.append(current_max)
+    return (r, l)
 
-    return Distance(current_max, current_min)
 
 if __name__ == '__main__':
     TestCase = namedtuple('TestCase', ['num_other_stalls', 'num_people', 'answer'])
