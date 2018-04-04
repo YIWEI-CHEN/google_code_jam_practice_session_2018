@@ -65,7 +65,6 @@ def evacuation(num_parties, senators):
                     continue
                 
                 instruction = get_instruction(indices, peo_per_time)
-#                print(instruction, evacuated_result)
                 if is_empty(evacuated_result):
                     return instruction
                 else:
